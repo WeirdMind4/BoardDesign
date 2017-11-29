@@ -23,13 +23,7 @@ namespace BoardGame
 
         //starting position of first tile
         Point position = new Point(0, 0);
-
-        //coordinates for each arrow- changes with each arrow click- should always be 0 or hTile/wTile
-        Point testMove = new Point(0, 0);
-        Point temp = new Point(0, 0);
-
         Point startPoint = new Point(0, 0);
-
         int direction = 0;  //used to verify that the direction has been set
 
         //bool value to determine if an arrow has been already clicked
@@ -38,14 +32,19 @@ namespace BoardGame
         bool placeClicked = false;
         List<Panel1> allClicked = new List<Panel1>();
         List<Panel1> allHighlight = new List<Panel1>();
-
-
-
-       // Panel highlight = new Panel();
-       // Panel clickedTile = new Panel();
+        //List<Unit> allSelectedUnits = new List<Unit>();
+        Unit[] allSelectedUnits = new Unit[2];//used in the Panel_Click method
+        
 
         private void btnPlace_Click(object sender, EventArgs e)
         {
+            if (tilesCreated.Count == 0)//creates the start tile no matter where
+            {   //not a good thing if tile placement is out of bounds but... I did it anyway
+                CreateTile();
+                return;
+            }
+
+        
             //prevents creating overlapping tiles at start
             if (tilesCreated.Count == 1 && arrowClicked == false)
             {
@@ -70,18 +69,20 @@ namespace BoardGame
         //determines if the next tile will exit the form
         private bool Boundary()
         {
+        Point temp = new Point(0,0);
+        
             temp.X = position.X; //if hits a boundary/ can't move this restores point to head tile
             temp.Y = position.Y;
 
             VerifiedDirection();    //moves position of head tile
 
-            if (position.X < 3 || position.X > (this.Width - 45)) //if outside the form
-            {
+            if (position.X < 1 || position.X > (this.Width - (wTile+2) - 21)) //don't ask where I got the number from
+            {//if outside the form
                 position.X = temp.X;    //reset the position to current tile
-                position.Y = temp.Y;    //shouldnt need this but just in case -  full reset
+                position.Y = temp.Y;    
                 return false;
             }
-            else if (position.Y < (gbToolbox.Height + 3) || position.Y > (this.Height - 75))
+            else if (position.Y < 100 || position.Y > (this.Height - (hTile+2) - 43))
             {
                 position.X = temp.X;    //shouldnt need this but just in case -  full reset
                 position.Y = temp.Y;    //reset the position to current tile
@@ -127,6 +128,7 @@ namespace BoardGame
             else
             {
                 newTile.BackColor = backgroundTile;               //fills tile with color
+                newTile.ForeColor = backgroundTile;
                 imageAdded = false;
             }
              
@@ -144,61 +146,114 @@ namespace BoardGame
             pbBackground.SendToBack(); //prevents the BG panel from covering the new highlight panel
         }
 
-        private void intersectsWith(Panel1 newTile)
+        private void intersectsWith(Panel1 tile)
         {
             foreach (Panel1 p in tilesCreated) //checks if tile is overlapping another tile
             {
-                if (newTile.Bounds.IntersectsWith(p.Bounds) && (newTile.Name != p.Name))//checks if intersects with all tiles
+                if (tile.Bounds.IntersectsWith(p.Bounds) && (tile.Name != p.Name))//checks if intersects with all tiles
                 {                                              //if newTile IS the tile
-                    newTile.BackColor = Color.Yellow; //tile changes color to yellow
+                    tile.BackColor = Color.Yellow; //tile changes color to yellow
                     return;//otherwise will keep foreaching and turn tile black again
                 }
                 else
                 {
-                    newTile.BackColor = backgroundTile;
+                    tile.BackColor = tile.ForeColor;
                 }
             }
         }
 
-        private Panel1 highlight(Panel1 clickedTile)//creates a new panel for highlight
+        public Panel1 highlight(Panel1 clickedTile)//creates a new panel for highlight when clicking tiles
         {
             Panel1 highlight = new Panel1();
-            highlight.BackColor = Color.Red; //set color of highlight tile
+            if (allClicked.Any())
+            {
+                highlight.BackColor = Color.Blue; //set color of highlight tile
+            }
+            else
+            {
+                highlight.BackColor = Color.Red; //set color of highlight tile
+            }
             highlight.Size = new Size(clickedTile.Width + 2, clickedTile.Height + 2);//sets size of highlight tile
             highlight.Location = new Point(clickedTile.Location.X - 1, clickedTile.Location.Y - 1);//set location of highlight tile
             Controls.Add(highlight);//add highlight tile to form
 
             return highlight;
         }
+        public Panel1 highlight(Panel panelToHighlight, Color highlightColor)//more generic constructor of the highlight method
+        {
+            Panel1 highlight = new Panel1();
+            highlight.BackColor = highlightColor;
+            highlight.Size = new Size(panelToHighlight.Width + 2, panelToHighlight.Height + 2);//sets size of highlight tile
+            highlight.Location = new Point(panelToHighlight.Location.X - 1, panelToHighlight.Location.Y - 1);//set location of highlight tile
+            Controls.Add(highlight);//add highlight tile to form
+            return highlight;
+        }
+
+
 
         private void Panel_Click(object sender, EventArgs e)
         {
-            Panel1 clickedTile = (Panel1)sender;
+           
+            Panel1 clickedTile = new Panel1();
             Panel1 highlightTile = new Panel1();
+            clickedTile = (Panel1)sender;
 
-            if (ModifierKeys.HasFlag(Keys.Control))//if ctrl is pressed
-            {                //create and add new highlights to list
-                allClicked.Add(clickedTile);//add clicked to list of clicked tiles
 
-                highlightTile = highlight(clickedTile);
-                allHighlight.Add(highlightTile);//add highlight to list of highlighted tiles   
-                //return;
+            MouseEventArgs me = (MouseEventArgs)e;//used to differentiate left vs right click
+            if (me.Button == MouseButtons.Right)//if right click
+            {
+                //MessageBox.Show("register a right click");
+                if (allSelectedUnits[0] != null)//and unit was previously selected
+                {
+                    //move the unit
+                    allSelectedUnits[0].changeLocation(clickedTile);
+                    
+                }else
+                {
+                    MessageBox.Show("Error! Selected Unit could not be added.");
+                }
+
             }
-            else//if only 1 tile has been clicked
-            {       //reset clicked lists
-                deleteList(allHighlight);//deletes all panels in list
-                clearList(allHighlight);//resets the highlist list
-                clearList(allClicked);//resets all clicked list
+            else//if left click
+            {
 
-                highlightTile = highlight(clickedTile);//create a highlight tile
-                //allHighlight.Clear();
-                allHighlight.Insert(0, highlightTile);//replace/add highlight tile as #1 in list
-                allClicked.Insert(0, clickedTile);//replace clicked tile list #1 with new clicked 
+                if (ModifierKeys.HasFlag(Keys.Control))//if ctrl is pressed
+                {                //create and add new highlights to list
+                    allClicked.Add(clickedTile);//add clicked to list of clicked tiles
 
-                position.X = clickedTile.Location.X; //allows branching from other tiles 
-                position.Y = clickedTile.Location.Y; //instead of one snake
+                    highlightTile = highlight(clickedTile);
+                    allHighlight.Add(highlightTile);//add highlight to list of highlighted tiles   
+                                                    //return;
+                }
+                else//if only 1 tile has been clicked
+                {       //reset clicked lists
+                    deleteList(allHighlight);//deletes all panels in list
+                    clearList(allHighlight);//resets the highlist list
+                    clearList(allClicked);//resets all clicked list
+
+                    highlightTile = highlight(clickedTile);//create a highlight tile
+                                                           //allHighlight.Clear();
+                    allHighlight.Insert(0, highlightTile);//replace/add highlight tile as #1 in list
+                    allClicked.Insert(0, clickedTile);//replace clicked tile list #1 with new clicked 
+
+                    position.X = clickedTile.Location.X; //allows branching from other tiles 
+                    position.Y = clickedTile.Location.Y; //instead of one snake
+
+                    if (clickedTile.unitsOnThisPanel.Any())//if newly selected tile has a unit
+                    {
+                        //MessageBox.Show("panel has a unit");//for use in debugging
+                        
+                        if (clickedTile.unitsOnThisPanel.Any())
+                        {
+                            //simultaneiously clears the array of the old selected unit and selects this one
+                            allSelectedUnits[0] = clickedTile.unitsOnThisPanel.First();
+                        }  
+                    }
+
+                }
+                pbBackground.SendToBack();
             }
-            pbBackground.SendToBack();
+            
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
@@ -210,10 +265,10 @@ namespace BoardGame
 
             deleteList(allClicked);
 
-            foreach(Panel1 p in tilesCreated) //if tile is deleted that intersects with another tile this goes back and removes yellow
-            {
+           /* foreach(Panel1 p in tilesCreated) //if tile is deleted that intersects with another tile this goes back and removes yellow
+            {//is only important if top tile is smaller than bottom and bottom has been deleted
                 intersectsWith(p);
-            }
+            }*/
 
         }//deleted panels
     }
