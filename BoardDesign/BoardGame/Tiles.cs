@@ -13,17 +13,24 @@ namespace BoardGame
     public partial class Form1 : Form
     {
 
-        //height and width of tiles
+        #region universalVariables
+        //default height and width of tiles
         int hTile = 30;
         int wTile = 30;
 
         //number of tiles
-        List<Panel1> tilesCreated = new List<Panel1>();
+        List<Panel1> tilesCreated = new List<Panel1>();//master list of all of the tiles
         int numTiles = 0;
 
         //starting position of first tile
         Point position = new Point(0, 0);
+
+        //coordinates for each arrow- changes with each arrow click- should always be 0 or hTile/wTile
+        Point testMove = new Point(0, 0);
+        Point temp = new Point(0, 0);
+
         Point startPoint = new Point(0, 0);
+
         int direction = 0;  //used to verify that the direction has been set
 
         //bool value to determine if an arrow has been already clicked
@@ -34,17 +41,13 @@ namespace BoardGame
         List<Panel1> allHighlight = new List<Panel1>();
         //List<Unit> allSelectedUnits = new List<Unit>();
         Unit[] allSelectedUnits = new Unit[2];//used in the Panel_Click method
-        
+        #endregion universalVariables
+
+        // Panel highlight = new Panel();
+        // Panel clickedTile = new Panel();
 
         private void btnPlace_Click(object sender, EventArgs e)
         {
-            if (tilesCreated.Count == 0)//creates the start tile no matter where
-            {   //not a good thing if tile placement is out of bounds but... I did it anyway
-                CreateTile();
-                return;
-            }
-
-        
             //prevents creating overlapping tiles at start
             if (tilesCreated.Count == 1 && arrowClicked == false)
             {
@@ -69,20 +72,18 @@ namespace BoardGame
         //determines if the next tile will exit the form
         private bool Boundary()
         {
-        Point temp = new Point(0,0);
-        
             temp.X = position.X; //if hits a boundary/ can't move this restores point to head tile
             temp.Y = position.Y;
 
             VerifiedDirection();    //moves position of head tile
 
-            if (position.X < 1 || position.X > (this.Width - (wTile+2) - 21)) //don't ask where I got the number from
-            {//if outside the form
+            if (position.X < 3 || position.X > (this.Width - 45)) //if outside the form
+            {
                 position.X = temp.X;    //reset the position to current tile
-                position.Y = temp.Y;    
+                position.Y = temp.Y;    //shouldnt need this but just in case -  full reset
                 return false;
             }
-            else if (position.Y < 100 || position.Y > (this.Height - (hTile+2) - 43))
+            else if (position.Y < (gbToolbox.Height + 3) || position.Y > (this.Height - 75))
             {
                 position.X = temp.X;    //shouldnt need this but just in case -  full reset
                 position.Y = temp.Y;    //reset the position to current tile
@@ -116,6 +117,7 @@ namespace BoardGame
 
         public void CreateTile()
         {
+            //need to alter to make more generic so I can call with custom inputs
             Panel1 newTile = new Panel1(); //creates new tile panel
 
             numTiles++;
@@ -128,13 +130,15 @@ namespace BoardGame
             else
             {
                 newTile.BackColor = backgroundTile;               //fills tile with color
-                newTile.ForeColor = backgroundTile;
                 imageAdded = false;
             }
              
             newTile.Size = new Size(wTile, hTile); //sets size of tile             
             newTile.Location = new Point(position.X, position.Y); //sets position of tile
             newTile.Name = "tile" + numTiles;              //changes name of tile to "tile#"
+
+            //MessageBox.Show(newTile.Name);
+
             newTile.MouseClick += Panel_Click;             //creates event for tile / addes mouseClick event
 
             intersectsWith(newTile); //checks if the new tile intersects with all other created tiles
@@ -146,18 +150,18 @@ namespace BoardGame
             pbBackground.SendToBack(); //prevents the BG panel from covering the new highlight panel
         }
 
-        private void intersectsWith(Panel1 tile)
+        private void intersectsWith(Panel1 newTile)
         {
             foreach (Panel1 p in tilesCreated) //checks if tile is overlapping another tile
             {
-                if (tile.Bounds.IntersectsWith(p.Bounds) && (tile.Name != p.Name))//checks if intersects with all tiles
+                if (newTile.Bounds.IntersectsWith(p.Bounds) && (newTile.Name != p.Name))//checks if intersects with all tiles
                 {                                              //if newTile IS the tile
-                    tile.BackColor = Color.Yellow; //tile changes color to yellow
+                    newTile.BackColor = Color.Yellow; //tile changes color to yellow
                     return;//otherwise will keep foreaching and turn tile black again
                 }
                 else
                 {
-                    tile.BackColor = tile.ForeColor;
+                    //newTile.BackColor = backgroundTile;
                 }
             }
         }
@@ -169,8 +173,7 @@ namespace BoardGame
             {
                 highlight.BackColor = Color.Blue; //set color of highlight tile
             }
-            else
-            {
+            else{
                 highlight.BackColor = Color.Red; //set color of highlight tile
             }
             highlight.Size = new Size(clickedTile.Width + 2, clickedTile.Height + 2);//sets size of highlight tile
@@ -210,7 +213,7 @@ namespace BoardGame
                     
                 }else
                 {
-                    MessageBox.Show("Error! Selected Unit could not be added.");
+                    MessageBox.Show("error in adding the selected unit");
                 }
 
             }
@@ -265,10 +268,10 @@ namespace BoardGame
 
             deleteList(allClicked);
 
-           /* foreach(Panel1 p in tilesCreated) //if tile is deleted that intersects with another tile this goes back and removes yellow
-            {//is only important if top tile is smaller than bottom and bottom has been deleted
+            foreach(Panel1 p in tilesCreated) //if tile is deleted that intersects with another tile this goes back and removes yellow
+            {
                 intersectsWith(p);
-            }*/
+            }
 
         }//deleted panels
     }

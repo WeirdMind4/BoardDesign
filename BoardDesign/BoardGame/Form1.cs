@@ -28,10 +28,6 @@ namespace BoardGame
         TextBox tbBrowse = new TextBox();
         Button btnImageOK = new Button();
 
-        int ruler = 0;//for startup ruler marks
-        List<Panel1> rulerList = new List<Panel1>();
-        List<Label> rulerLabels = new List<Label>();
-
 
         public Form1()
         {
@@ -41,7 +37,7 @@ namespace BoardGame
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            rulerHori();//shows the startup ruler
+
         }
 
         private void Form1_Click(object sender, EventArgs e)
@@ -54,64 +50,6 @@ namespace BoardGame
             clearList(allClicked);
             clearList(allHighlight);
         }
-        
-         public void rulerHori()//got bored and made this to see where to start the tile
-        {   //slightly ugly but it does what its supposed to
-            if (ruler <= this.Width)
-            {
-                Panel1 p = new Panel1();
-                p.Size = new Size(5, 5);
-                p.Location = new Point(((pbBackground.Location.X) + ruler), pbBackground.Location.Y);
-                p.BackColor = Color.Black;
-                Label l = new Label();
-                l.Text = ruler.ToString();
-                l.Location = new Point(((pbBackground.Location.X + 3) + ruler), pbBackground.Location.Y + 2);
-                l.BackColor = Color.Transparent;
-                l.AutoSize = true;
-
-                rulerLabels.Add(l);
-                rulerList.Add(p);
-                Controls.Add(p);
-                Controls.Add(l);
-                p.BringToFront();
-                l.BringToFront();
-
-                System.Drawing.Drawing2D.GraphicsPath buttonPath = new System.Drawing.Drawing2D.GraphicsPath();
-                System.Drawing.Rectangle newPanel = p.ClientRectangle;
-                buttonPath.AddEllipse(newPanel);
-                p.Region = new System.Drawing.Region(buttonPath);
-                ruler += 50;
-                rulerVert();
-                rulerHori();
-            }
-        }
-        public void rulerVert()
-        {
-                Panel1 p = new Panel1();
-                p.Size = new Size(5, 5);
-                p.Location = new Point(((pbBackground.Location.X)), pbBackground.Location.Y+ruler);
-                p.BackColor = Color.Black;
-                Label l = new Label();
-                l.Text = ruler.ToString();
-                l.Location = new Point(((pbBackground.Location.X + 3)), pbBackground.Location.Y + ruler);
-                l.BackColor = Color.Transparent;
-                l.AutoSize = true;
-
-                rulerLabels.Add(l);
-                rulerList.Add(p);
-                Controls.Add(p);
-                Controls.Add(l);
-                p.BringToFront();
-                l.BringToFront();
-
-                System.Drawing.Drawing2D.GraphicsPath buttonPath = new System.Drawing.Drawing2D.GraphicsPath();
-                System.Drawing.Rectangle newPanel = p.ClientRectangle;
-                buttonPath.AddEllipse(newPanel);
-                p.Region = new System.Drawing.Region(buttonPath);
-        }
-
-        
-        
 
         //determines the sizes of the form and tile and sets initial tile start postition
         private void btnCreate_Click(object sender, EventArgs e)
@@ -121,7 +59,7 @@ namespace BoardGame
 
             int parsedH = 0;
             int parsedW = 0;
-           /*parsedH = parseInput(tbFormHeight);//dont need this anymore, just starting screen full open
+            parsedH = parseInput(tbFormHeight);
             parsedW = parseInput(tbFormWidth);
 
             if (parsedH == -1 || parsedH != hForm)//if the new input is NOT equal to the tile size
@@ -133,65 +71,35 @@ namespace BoardGame
                 wForm = 457;
             }
             this.Size = new Size(wForm, hForm);
-            */
+
             parsedH = parseInput(tbTileHeight);
             parsedW = parseInput(tbTileWidth);
 
             //checks tile size text boxes, if empty or has !digits it sets to default 30x30
-            if (parsedH == -1)
+            if (parsedH == -1 || parsedH != hTile)
             {
-                hTile = 50;
+                hTile = 30;
             }
-            else
+            if (parsedW == -1 || parsedW != wTile)
             {
-                hTile = parsedH;
+                wTile = 30;
             }
-            if (parsedW == -1)
-            {
-                wTile = 50;
-            }
-            else
-            {
-                wTile = parsedW;
-            }
-
 
             parsedH = parseInput(tbTileHeight);
             parsedW = parseInput(tbTileWidth);
 
             //checks tile start position text boxes, if empty or has !digits it sets to default 300x400
-            if (parsedH == -1)
+            if (parsedH == -1 || parsedH != position.Y)
             {
-                position.Y = 0;
+                //y = 200;
+                position.Y = 200;
             }
-            else
+            if (parsedW == -1 || parsedW != position.X)
             {
-                position.Y = parsedH;               
-            }
-
-            if (parsedW == -1)
-            {
-                position.X = 0;
-            }
-            else
-            {
-                position.X = parsedW;
-            }
-            fixPosition();//X and Y are relative to the whole form, this method moves position to backgroup position
-
-            deleteList(rulerList);//deletes ruler after create board has been clicked
-            foreach (Label l in rulerLabels)
-            {
-                Controls.Remove(l);
-                l.Dispose();
+                //x = 300;
+                position.X = 300;
             }
 
-        }
-
-        private void fixPosition()//moves point below toolbar
-        {//X and Y are relative to the whole form, this method moves position to background XY
-            position.X += 7;
-            position.Y += 101;
         }
 
         public void clearList(List<Panel1> list)//receives list to be cleared
@@ -216,6 +124,8 @@ namespace BoardGame
             {
                 //arrowX = 0;             //resets the arrow button
                 //arrowY = 0;
+                testMove.X = 0;
+                testMove.Y = 0;
                 arrowClicked = false;
             }
             //checks if a tile has been placed. prevents moving multiple squares and creating an island tile
@@ -224,18 +134,35 @@ namespace BoardGame
                 if (btnDirection == btnUp)   //if the clicked button was up
                 {
                     direction = 1200;             //move the starting point of the next tile up the distance of the tile
+                                                  //arrowX = 0;             //coordinates of up = same column (X), different row (Y)
+                                                  //arrowY = -hTile;
+                    testMove.X = position.X;
+                    testMove.Y = position.Y - hTile;
+
                 }
                 else if (btnDirection == btnDown) //if the clicked button was down
                 {
                     direction = 6000;
+                    //arrowX = 0;             //coordinates of down = same column (X), different row (Y)
+                    //arrowY = hTile;
+                    testMove.X = position.X;
+                    testMove.Y = position.Y + hTile;
                 }
                 else if (btnDirection == btnLeft) //if the clicked button was left
                 {
                     direction = 9000;
+                    //arrowX = -wTile;        //coordinates of left = differnt column (X), same row (Y)
+                    //arrowY = 0;
+                    testMove.X = position.X - wTile;
+                    testMove.Y = position.Y;
                 }
                 else if (btnDirection == btnRight) //if the clicked button was right
                 {
                     direction = 3000;
+                    //arrowX = wTile;          //coordinates of left = differnt column (X), same row (Y)
+                    //arrowY = 0;
+                    testMove.X = position.X + wTile;
+                    testMove.Y = position.Y;
                 }
 
             }
@@ -256,13 +183,10 @@ namespace BoardGame
                     this.BackColor = colorDialogBox.Color;   //changes color of background
                     pbBackground.BackgroundImage = null;
                 }
+
                 else if (btn == btnColorTile)   //if the tile color button has been clicked
                 {
-                     if (allClicked.Count == 0 && cbAllTiles.Checked == false)//if nothing(all tiles checkbox or an tiles) is clicked
-                    {
-                        backgroundTile = colorDialogBox.Color;
-                    }
-                    else if (cbAllTiles.Checked)//if the all tiles has been checked
+                    if (cbAllTiles.Checked)//if the all tiles has been checked
                     {
                         foreach (Panel1 p in tilesCreated)//change color for all tiles
                         {
@@ -270,7 +194,6 @@ namespace BoardGame
                             p.BackgroundImage = null;
                             imageAdded = false;
                             backgroundTile = colorDialogBox.Color; //sets all future tiles to this color
-                            p.ForeColor = p.BackColor;
                         }
                     }
                     else//if all tiles has NOT been checked / just the tiles highlighted
@@ -278,25 +201,24 @@ namespace BoardGame
                         foreach (Panel1 p in allClicked)
                         {
                             p.BackColor = colorDialogBox.Color; //get tile from panels selected
-                            p.ForeColor = p.BackColor;
                             p.BackgroundImage = null;
                             imageAdded = false;
                         }
                     }
                 }
-            }
-            else if (btn == btnColorPawn )
-            {
-                foreach (Panel1 p in allClicked)
+                else if (btn == btnColorPawn )
                 {
-                    foreach(Unit u in p.unitsOnThisPanel)
+                    foreach (Panel1 p in allClicked)
                     {
-                        u.setColor(colorDialogBox.Color);
-                        u.BackgroundImage = null;
-                        imageAdded = false;
+                        foreach(Unit u in p.unitsOnThisPanel)
+                        {
+                            u.setColor(colorDialogBox.Color);
+                            u.BackgroundImage = null;
+                            imageAdded = false;
+                        }
+
                     }
                 }
-                
             }
         }
 
@@ -319,10 +241,6 @@ namespace BoardGame
 
             else if (btn == btnImageTile)   //if the tile image button has been clicked
             {
-               /*if (allClicked.Count == 0 && cbAllTiles.Checked == false)//if nothing(all tiles checkbox or an tiles) is clicked
-               {
-                        backgroundTile = colorDialogBox.Color;
-               }*///add this for creating new tile with image already on insteda of creating tile then adding image
                 if (cbAllTiles.Checked)//if the all tiles has been checked
                 {
                     foreach (Panel1 p in tilesCreated)//change image for all tiles
@@ -411,7 +329,6 @@ namespace BoardGame
                 foreach (Panel1 p in list)
                 {
                     drawCircle(p);
-                    p.Tag = "0";
                 }
             }
             else if (selection == 1)//if selection is 'Triangle'
@@ -419,7 +336,6 @@ namespace BoardGame
                 foreach (Panel1 p in list)
                 {
                     drawTriangle(p);
-                    p.Tag = "1";
                 }
             }
             else
@@ -439,6 +355,10 @@ namespace BoardGame
             //create a circle withing the new rectangle
             buttonPath.AddEllipse(newPanel);
             p.Region = new System.Drawing.Region(buttonPath);
+
+            //set the buttons region property to the newly created circle region
+            p.BackColor = backgroundTile;
+
         }
 
         public void drawTriangle(Panel p)
@@ -456,6 +376,7 @@ namespace BoardGame
 
             buttonPath.AddPolygon(points);
             p.Region = new System.Drawing.Region(buttonPath);
+            p.BackColor = backgroundTile;
         }
         #endregion shapes
 
@@ -468,12 +389,12 @@ namespace BoardGame
                 parsedH = parseInput(tbHeight);
                 parsedW = parseInput(tbWidth);
 
-                if (parsedH != -1)//if the new input is NOT equal to the tile size
+                if (parsedH != -1 && parsedH != hForm)//if the new input is NOT equal to the tile size
                 {
                     hForm = parsedH;
                 }
 
-                if (parsedW != -1)//if the new input is NOT equal to the tile size
+                if (parsedW != -1 && parsedW != wForm)//if the new input is NOT equal to the tile size
                 {
                     wForm = parsedW;
                 }
@@ -509,117 +430,29 @@ namespace BoardGame
                          
                 list = whichList();
 
-                if (parsedH != -1)//if the new input is NOT equal to the tile size
+                if (parsedH != -1 && parsedH != hTile)//if the new input is NOT equal to the tile size
                 {
-                
-                    if (list.Count != 0)//if nothing(all tiles checkbox or an tiles) is clicked
+                    foreach (Panel1 p in list)
                     {
-                        foreach (Panel1 p in list)
-                        {
-
-                            p.Size = new Size(p.Width, parsedH);//sets new size to new input with tile width - 
-                                                                //wTile(standard tile size) would change the re-fix the width of the tile to original
-                            intersectsWith(p);
-
-                            if (p.Tag != null && p.Tag.ToString() == "0")//if it is circle
-                            {
-                                drawCircle(p);
-                            }
-                            if (p.Tag != null && p.Tag.ToString() == "1")
-                            {
-                                drawTriangle(p);
-                            }
-                        }
+                        p.Size = new Size(p.Width, parsedH);//sets new size to new input with tile width - 
+                        //wTile(standard tile size) would change the re-fix the width of the tile to original
+                        intersectsWith(p);
                     }
-                    else
-                    {
-                        hTile = parsedH;//set default height to input
-                    }
-
                 }
 
-                if (parsedW != -1)//if the new input is NOT equal to the tile size
+                if (parsedW != -1 && parsedW != wTile)//if the new input is NOT equal to the tile size
                 {
-                    if (list.Count != 0)
+                    foreach (Panel1 p in list)
                     {
-                        foreach (Panel1 p in list)
-                        {
-                            p.Size = new Size(parsedW, p.Height);//sets new size to new input with tile width - 
-                                                                 //wTile(standard tile size) would change the re-fix the width of the tile to original
-                            intersectsWith(p);
-
-                            if (p.Tag != null && p.Tag.ToString() == "0")//if it is circle
-                            {
-                                drawCircle(p);
-                            }
-                            if (p.Tag != null && p.Tag.ToString() == "1")
-                            {
-                                drawTriangle(p);
-                            }
-                            
-                        }
-                    }
-                    else
-                    {
-                        wTile = parsedW;
+                        p.Size = new Size(parsedW, p.Height);//sets new size to new input with tile width - 
+                        //wTile(standard tile size) would change the re-fix the width of the tile to original
+                        intersectsWith(p);
                     }
                 }
                 tbTileH.Clear();
                 tbTileW.Clear();
             }
         }
-        
-            private void unitSize_Enter(object sender, KeyPressEventArgs e)//change size of unita on toolbar
-        {
-            if (e.KeyChar == (char)Keys.Enter)
-            {
-                int parsedH = 0;
-                int parsedW = 0;
-                parsedH = parseInput(tbUnitH);
-                parsedW = parseInput(tbUnitW);
-
-                if (cbAllUnits.Checked)
-                {
-                    foreach (Panel1 p in tilesCreated)
-                    {
-                        foreach (Unit u in p.unitsOnThisPanel)
-                        {
-                            if (parsedH != -1)//if the new input is NOT equal to the tile size
-                            {
-                                u.Height = parsedH;
-                            }
-
-                            if (parsedW != -1)//if the new input is NOT equal to the tile size
-                            {
-                                u.Width = parsedW;
-                            }
-
-                        }
-                    }
-                }
-                else
-                {
-                    foreach (Panel1 p in allClicked)
-                    {
-                        foreach (Unit u in p.unitsOnThisPanel)
-                        {
-                            if (parsedH != -1)//if the new input is NOT equal to the tile size
-                            {
-                                u.Height = parsedH;
-                            }
-
-                            if (parsedW != -1)//if the new input is NOT equal to the tile size
-                            {
-                                u.Width = parsedW;
-                            }
-                        }
-                    }
-                }
-                tbUnitH.Clear();
-                tbUnitW.Clear();
-            }
-        }
-
 
         #region connectionTab 
         private void connection_Click(object sender, EventArgs e)
@@ -703,7 +536,21 @@ namespace BoardGame
             }
         }
 
-
         #endregion connectionTab
+
+
+        private void label17_Click(object sender, EventArgs e)
+        {
+
+        }
+
+
+
+        private void tbTileHeight_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+
     }
 }

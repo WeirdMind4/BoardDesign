@@ -12,7 +12,12 @@ namespace BoardGame
 {
     public partial class Form1 : Form
     {
+        //use the integer for naming purposes
         int unitNum = 0;
+
+        //use this as a master list of all of the units
+        List<Unit> masterUnitList = new List<Unit>();
+
         //colin's code
         public class Panel1 : Panel //this class allows each panel to have a list of the connected panels
         {
@@ -20,7 +25,7 @@ namespace BoardGame
             public LinkedList<Unit> unitsOnThisPanel = new LinkedList<Unit>();//list of units on this panel
 
         }
-
+        #region creatingUnits
         private void addUnit_Click(object sender, EventArgs e) //control for adding the unit
         {
             if (allClicked.Any() == false)
@@ -29,22 +34,67 @@ namespace BoardGame
             }
             else
             {
-                foreach (Panel1 selectedPanel in allClicked)
+                foreach (Panel1 panel in allClicked)
                 {
-                    Unit newUnit = new Unit();
-                    newUnit.Location = new Point(0, 0);//sets it outside at first
-                    newUnit.setName("unit " + unitNum);
-                    //newUnit.setParameters(allClicked.First());
-                    newUnit.setParameters(selectedPanel);
-                    unitNum++;
-                    //Controls.Add(newUnit.getUnit());
-                    Controls.Add(newUnit);
-                    //newUnit.getUnit().BringToFront();
-                    newUnit.BringToFront();
+                    createUnit(panel);
                 }
-                
+
+
+                //createUnit(allClicked);
             }
         }
+
+        //method puts a unit on the specified panel
+        public Unit createUnit(Panel1 startingLocation)
+        {
+
+            Unit newUnit = new Unit();
+            newUnit.Location = new Point(0, 0);//sets it outside at first
+            newUnit.setName("unit " + unitNum);
+            //newUnit.setParameters(allClicked.First());
+            newUnit.setParameters(startingLocation);
+            unitNum++;
+            //Controls.Add(newUnit.getUnit());
+            Controls.Add(newUnit);
+            //newUnit.getUnit().BringToFront();
+            newUnit.BringToFront();
+            masterUnitList.Add(newUnit);
+            return newUnit;
+        }
+
+        #endregion creatingUnits
+
+
+        #region deletingUnits
+
+        private void deleteUnit_Click(object sender, EventArgs e)
+        {
+           
+            foreach (Panel1 p in allClicked)
+            {
+                //if there are any units on the panel
+                if (p.unitsOnThisPanel.Any())
+                {
+                    //delete the first unit
+                    string a = p.unitsOnThisPanel.First().Name;
+                    deleteUnitMethod(p.unitsOnThisPanel.First());
+                    masterUnitList.Remove(p.unitsOnThisPanel.First());//remove the reference from the master list
+                    MessageBox.Show("Deleted " + a + " from " + p.Name );
+                }
+       
+            }
+
+        }
+
+        private void deleteUnitMethod(Unit u)
+        {
+
+            //masterUnitList.Remove(u);//remove the reference from the master list
+            Controls.Remove(u);//remove the unit from the screen
+            u.Dispose();//release the data
+        }
+
+        #endregion deletingUnits
 
         //info: when you try to put a panel in the same place as another panel the IDE will add that panel to the other panel . 
         public class Unit : Panel //I skipped the abstraction of the Unit and just made it a direct child of the Panel class
@@ -86,14 +136,20 @@ namespace BoardGame
                 return this.currentLocation;
             }
 
-            public String getName()
+            public string getName()
             {
                 return name;
             }
-            public void setName(String a)
+            public void setName(string a)
             {
                 name = a;
             }
+            public Color getColor()
+            {
+                return this.BackColor;
+            }
+
+
             public void setColor(Color newColor)
             {
                 this.BackColor = newColor;
@@ -125,85 +181,6 @@ namespace BoardGame
 
 
         }
-
-
-
-        /* 
-               public class Unit
-               {
-                   private Panel1 currentLocation;//square's current location
-                   private unitPanel thisUnitPanel;
-                   private String name = "default";
-
-                   /*public Unit()//empty constructer
-                   {
-
-                   }*/
-                   /*
-                   public Unit(Panel1 startingLocation)//instantiate a Unit
-                   {
-                       //on creation, the starting location will be the one that is currently highlighted
-
-
-
-
-
-
-                       //graphic representaion
-                       thisUnitPanel = new unitPanel();
-
-                       thisUnitPanel.BringToFront();
-                       thisUnitPanel.BackColor = Color.LimeGreen;
-                       thisUnitPanel.Size = new Size(startingLocation.Width - 20, startingLocation.Height - 20); //sets size of tile             
-                                                     //tile.Location = new Point(x, y);            //sets location of tile
-                       thisUnitPanel.Location = new Point(startingLocation.Location.X, startingLocation.Location.Y);
-                       this.adjustLocation();
-
-                       //thisUnitPanel.associatedUnit = this;//sets the unitPanel to be associated with this Unit
-
-                       //variable to hold locationID
-                       this.currentLocation = startingLocation;
-
-
-
-                   }
-                   public Panel1 getLocation()
-                   {
-                       return this.currentLocation;
-                   }
-                   public unitPanel getUnit()
-                   {
-                       return this.thisUnitPanel;
-                   }
-                   public String getName()
-                   {
-                       return name;
-                   }
-                   public void setName(String a)
-                   {
-                       name = a;
-                   }
-
-
-                   public void changeLocation(Panel1 newLocation)
-                   {
-                       this.currentLocation = newLocation; this.changeLocation(newLocation);//
-                       this.thisUnitPanel.Location = newLocation.Location;
-                       this.adjustLocation();
-                   }
-
-                   public void adjustLocation()
-                   {
-                       this.thisUnitPanel.Location = new Point(thisUnitPanel.Location.X + 10, thisUnitPanel.Location.Y + 10);
-                   }
-
-
-               }
-
-
-           */
-
-
 
     }
 }
